@@ -1,4 +1,4 @@
-mport sqlite3
+import sqlite3
 from config import DATABASE
 
 skills = [(_, ) for _ in (['Python', 'SQL', 'API', 'Telegram'])]
@@ -14,6 +14,10 @@ statuses = [(_, ) for _ in ([
 class DB_Manager:
     def __init__(self, database):
         self.database = database
+    def get_skill_id(self, skill_name):
+        sql = "SELECT skill_id FROM skills WHERE skill_name = ?"
+        res = self.__select_data(sql, (skill_name,))
+        return res[0][0] if res else None
 
     def create_tables(self):
         conn = sqlite3.connect(self.database)
@@ -79,9 +83,12 @@ class DB_Manager:
         sql = 'INSERT OR IGNORE INTO project_skills VALUES(?, ?)'
         self.__executemany(sql, data)
 
+
+
     def get_statuses(self):
-        sql = 'SELECT * FROM status'
+        sql = 'SELECT status_name FROM status'
         return self.__select_data(sql)
+
 
     def get_status_id(self, status_name):
         sql = 'SELECT status_id FROM status WHERE status_name = ?'
@@ -108,6 +115,10 @@ class DB_Manager:
 
     def get_skills(self):
         return self.__select_data(sql='SELECT * FROM skills')
+    
+    def add_skill(self, skill_name: str):
+        sql = "INSERT OR IGNORE INTO skills (skill_name) VALUES(?)"
+        self.__executemany(sql, [(skill_name,)])
 
     def get_project_skills(self, project_name):
         res = self.__select_data(sql='''SELECT skill_name FROM projects
@@ -173,6 +184,6 @@ if __name__ == '__main__':
     manager.update_projects('description', ('Обновлённое описание', user_id, project_id))
     print("После обновления:", manager.get_project_info(user_id, 'Telegram Bot'))
 
-    skill_id = manager.__select_data('SELECT skill_id FROM skills WHERE skill_name=?', ('SQL',))[0][0]
+    skill_id = manager.get_skill_id('SQL')
     manager.delete_skill(project_id, skill_id)
     print("Навыки после удаления:", manager.get_project_skills('Telegram Bot'))
